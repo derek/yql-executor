@@ -44,6 +44,8 @@ E4X
 
 Just a special note: YQL makes use of E4X.  So if the non-quotes XML elements looks a little funky to you, that is why.  The awesome part about [E4X](http://en.wikipedia.org/wiki/ECMAScript_for_XML) is that you get XML natives in JavaScript.  The awful part of E4X is that it means you are using XML inside of JavaScript.  Read more into it if you are curious because a detailed explanation is well beyond the scope of this README.
 
+In short, E4X actually makes XML inside of JavaScript bearable, so don't freak out too much.
+
 Who/What/When/Where?
 -------
 
