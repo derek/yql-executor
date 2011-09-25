@@ -7,7 +7,7 @@ Executor is a web application that simply generates an [open datatable](http://w
 
 The neat things with datatables is that once you have one complete, you now have an API service that you can pass dynamic data to via the querystring.  Think the [REST URL](http://s89997654.onlinehome.us/screencaps/skitched-20110924-235709.jpg) YQL uses is too long and ugly? Use YQL's [Console](https://developer.yahoo.com/yql/console/) to create a query alias.  So for example, here is an API service that searches YouTube, Justin.TV, Flickr, and Netflix for the specified term in the querystring, [http://query.yahooapis.com/v1/public/yql/derek/mediasearch?query=kittens](http://query.yahooapis.com/v1/public/yql/derek/mediasearch?query=kittens).  The best part is, you don't thave to worry about hosting it.  Let Yahoo worry about that.
 
-`<execute>`
+Specifics
 --------
 Within YQL, there's a little-known feature, the `<execute>` sub-element.  Inside of `<execute>`, you can put whatever JavaScript you want to execute inside of YQL's [Rhino] engine.  Yes, you heard me right, any JavaScript you want to pass in.  It's pretty rad.
 
