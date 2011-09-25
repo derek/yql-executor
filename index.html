@@ -71,7 +71,7 @@
                         params = Y.JSON.parse(dataeditor.getSession().getValue());
                     }
                     
-                    Y.io("post.php", {
+                    Y.io("generator.php", {
                         method: "POST",
                         data: {
                             text: editor.getSession().getValue(),
