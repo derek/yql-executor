@@ -3,8 +3,6 @@
     <head>
         
         <link href="http://derek.github.com/sandbox/yui/gallerycss-cssbutton/cssbutton.css" type="text/css" rel="stylesheet" />
-        <script src="ace-0.2.0/src/ace.js" type="text/javascript" charset="utf-8"></script>
-        <script src="ace-0.2.0/src/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://yui.yahooapis.com/3.4.0/build/yui/yui-min.js"></script>
         <script src="http://embeditor.org/api.js"></script>
         
@@ -13,8 +11,8 @@
     <body class="yui3-skin-sam">
         
         <div>Datatable: <input style="width:800px" type="text" id="datatable_url" value="http://derek.io/~/executor/tables/157df2900c8b79e3ee640767ab08cc07.xml" /> <input type="button" id="load_datatable" value="load"></div>
-        <div id="editor"></div>
-        <iframe id="dataeditor" src="http://embeditor.org/?mode=javascript"></iframe>
+        <iframe class="embeditor" id="editor" src="http://embeditor.org/?mode=javascript"></iframe>
+        <iframe class="embeditor" id="dataeditor" src="http://embeditor.org/?mode=javascript"></iframe>
         
         <div id="output">
             <input class="yui3-button yui3-button-color-blue" type="button" value="Execute" id="btn_get_url"/>
@@ -29,18 +27,15 @@
         
             YUI().use("node", "io", "json", "yql", "attribute", "node-event-simulate", function(Y){
                 
-                var editor = ace.edit("editor");
+                var editor = new Embeditor("editor");
                 var dataeditor = new Embeditor("dataeditor");
-                var JavaScriptMode = require("ace/mode/javascript").Mode;
-                
-                editor.getSession().setMode(new JavaScriptMode());
                 
                 // Listen for datatable load requests
                 Y.one("#load_datatable").on("click", function(){
                     var url = Y.one("#datatable_url").get("value");
                     
                     Y.YQL("SELECT * FROM xml WHERE url='" + url + "'", function(data){
-                        editor.getSession().setValue(data.query.results.table.bindings.select.execute)
+                        editor.setValue(data.query.results.table.bindings.select.execute)
                         keys = data.query.results.table.bindings.select.inputs.key;
                         
                         var dataeditorOut = {};
@@ -67,17 +62,20 @@
                         if (value.length > 2) {
                             params = Y.JSON.parse(value);
                         }
-                        generateDatatable(params);
+                        
+                        editor.getValue(function(js){
+                            generateDatatable(js, params); 
+                        });
                     });
                 });
                 
                 Y.one("#load_datatable").simulate("click");
             
-                function generateDatatable(params){
+                function generateDatatable(js, params){
                     Y.io("generator.php", {
                         method: "POST",
                         data: {
-                            text: editor.getSession().getValue(),
+                            text: js,
                             keys: Y.Object.keys(params).join(",")
                         },
                         on:{
@@ -149,7 +147,10 @@
             .yui3-button {
                 font-size:120%;
             }
-            
+            .embeditor{
+                overflow: hidden;
+                border:none;
+            }
             #editor {
                 background: none repeat scroll 0 0 white;
                 bottom: 0;
@@ -168,9 +169,6 @@
                 right:0;
                 top: 40px;
                 width:300px;
-                
-                overflow: hidden;
-                border:none;
             }
             
             #editor, #dataeditor{
