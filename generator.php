@@ -1,6 +1,4 @@
 <?php
-    header("content-type: application/json");
-
     $js = stripslashes($_POST['text']);
     
     $keys = explode(",", $_POST['keys']);
@@ -16,11 +14,10 @@
         <select itemPath="" produces="XML">
           <inputs>';
           
-          if (count($keys)){
-              
-                  foreach ($keys as $k) {
-                      $xml .= '<key id="' . $k . '" type="xs:string" paramType="variable" required="true" />';
-                  }
+          if (count($keys)) {
+              foreach ($keys as $k) {
+                  $xml .= '<key id="' . $k . '" type="xs:string" paramType="variable" required="true" />';
+              }
           }
           
           $xml .='
@@ -35,8 +32,11 @@
     </table>';
     
     $filename = "tables/" . md5($xml) . ".xml";
-    
-    file_put_contents($filename, $xml);
+    if (!file_exists($filename)) {
+        file_put_contents($filename, $xml);   
+    }
+
+    header("content-type: application/json");
 
     echo json_encode(array(
         "filename" => "http://derek.io/~/executor/" . $filename

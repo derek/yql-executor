@@ -6,6 +6,7 @@
         <script src="ace-0.2.0/src/ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="ace-0.2.0/src/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://yui.yahooapis.com/3.4.0/build/yui/yui-min.js"></script>
+        <script src="http://embeditor.org/api.js"></script>
         
     </head>
     
@@ -13,7 +14,7 @@
         
         <div>Datatable: <input style="width:800px" type="text" id="datatable_url" value="http://derek.io/~/executor/tables/157df2900c8b79e3ee640767ab08cc07.xml" /> <input type="button" id="load_datatable" value="load"></div>
         <div id="editor"></div>
-        <div id="dataeditor"></div>
+        <iframe id="dataeditor" src="http://embeditor.org/?mode=javascript"></iframe>
         
         <div id="output">
             <input class="yui3-button yui3-button-color-blue" type="button" value="Execute" id="btn_get_url"/>
@@ -29,11 +30,10 @@
             YUI().use("node", "io", "json", "yql", "attribute", "node-event-simulate", function(Y){
                 
                 var editor = ace.edit("editor");
-                var dataeditor = ace.edit("dataeditor");
+                var dataeditor = new Embeditor("dataeditor");
                 var JavaScriptMode = require("ace/mode/javascript").Mode;
                 
                 editor.getSession().setMode(new JavaScriptMode());
-                dataeditor.getSession().setMode(new JavaScriptMode());
                 
                 // Listen for datatable load requests
                 Y.one("#load_datatable").on("click", function(){
@@ -46,20 +46,16 @@
                         var dataeditorOut = {};
                         if (!Y.Object.isEmpty(keys)) {
                             if (Y.Lang.isArray(keys)) {
-                                
-                                for (k in keys) {
-                                    Y.log(keys[k]);
-                                    dataeditorOut[keys[k].id] = "";
+                                for (k in keys) { 
+                                    dataeditorOut[keys[k].id] = (keys[k].default ? keys[k].default : "");
                                 }
                             }
                             else {
-                                
-                                    dataeditorOut[keys.id] = '';
+                                dataeditorOut[keys.id] = (keys.default ? keys.default : "");
                             }
                         }
-                        /*
-                        */
-                        dataeditor.getSession().setValue(Y.JSON.stringify(dataeditorOut, null, 4));
+                        
+                        dataeditor.setValue(Y.JSON.stringify(dataeditorOut, null, 4));
                     });
                 });
                 
@@ -67,10 +63,17 @@
                 Y.one("#btn_get_url").on("click", function(){
                     var params = [];
                     
-                    if (dataeditor.getSession().getValue().length > 2) {
-                        params = Y.JSON.parse(dataeditor.getSession().getValue());
-                    }
-                    
+                    dataeditor.getValue(function(value){
+                        if (value.length > 2) {
+                            params = Y.JSON.parse(value);
+                        }
+                        generateDatatable(params);
+                    });
+                });
+                
+                Y.one("#load_datatable").simulate("click");
+            
+                function generateDatatable(params){
                     Y.io("generator.php", {
                         method: "POST",
                         data: {
@@ -92,15 +95,15 @@
                             },
                             complete: function(a, b, c){
                                 Y.log("io:complete");
-                            
+                        
                                 var url = Y.JSON.parse(b.responseText).filename;
                                 var query = "use '" + url + "' as datatable; SELECT * FROM datatable";
                                 var size = Y.Object.size(params);
                                 var j = 0;
                                 var querystring = '';
-                                
+                            
                                 Y.one("#datatable_url").set("value", url);
-                                
+                            
                                 if (size > 0) {
                                     for(var i in params) {
                                         if (j === 0) {
@@ -115,29 +118,28 @@
                                     }
                                 }    
                                 query += ";";
-                                
+                            
                                 var iframeURL = "https://query.yahooapis.com/v1/public/yql?diagnostics=true&q=" + encodeURIComponent(query) + querystring;
                                 Y.one("#console_url").setContent(query).setAttribute("href", "http://developer.yahoo.com/yql/console/?q=" + encodeURIComponent(query));
                                 Y.one("#results").setAttribute("src", iframeURL);
-                                
+                            
                                 /*
                                 var aliasQuery = "insert into yql.queries.query (name,query) values ('test123123','" + addslashes(query) + "')";
-                                
+                            
                                 Y.YQL(aliasQuery, function(){
-                                    
+                                
                                 });
                                 */
                             }
                         }
                     })
-                });
-                
-                Y.one("#load_datatable").simulate("click");
+                }
             });
             
             function addslashes(str) {
             	return str.replace(/\\/g, '\\\\').replace(/\'/g, '\\\'').replace(/\"/g, '\\"').replace(/\0/g, '\\0');
             }
+            
             function stripslashes(str) {
             	return str.replace(/\\'/g, '\'').replace(/\\"/g, '"').replace(/\\0/g, '\\0').replace(/\\\\/g, '\\');
             }
@@ -166,6 +168,9 @@
                 right:0;
                 top: 40px;
                 width:300px;
+                
+                overflow: hidden;
+                border:none;
             }
             
             #editor, #dataeditor{
